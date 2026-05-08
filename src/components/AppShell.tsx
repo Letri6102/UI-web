@@ -5,15 +5,15 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 const PRIMARY_NAV = [
-  { href: "/", label: "Tổng quan", desc: "Tình hình ca trực và cảnh báo mới" },
-  { href: "/webcam", label: "Xem camera", desc: "Theo dõi luồng hình và xử lý nhanh" },
-  { href: "/events", label: "Xử lý cảnh báo", desc: "Xác minh ảnh, clip và kết quả" },
-  { href: "/settings", label: "Thiết lập", desc: "Chỉnh camera, vùng và ngưỡng cảnh báo" },
+  { href: "/", label: "Tổng quan", desc: "Số liệu và việc cần làm" },
+  { href: "/webcam", label: "Xem camera", desc: "Luồng hình trực tiếp" },
+  { href: "/events", label: "Xử lý cảnh báo", desc: "Xác minh ảnh và clip" },
+  { href: "/settings", label: "Thiết lập", desc: "Camera và ngưỡng" },
 ];
 
 const SUPPORT_NAV = [
-  { href: "/upload", label: "Kiểm tra nhanh", desc: "Tải ảnh để xem thử kết quả AI" },
-  { href: "/logs", label: "Nhật ký hệ thống", desc: "Dùng khi cần kiểm tra lỗi kỹ thuật" },
+  { href: "/upload", label: "Kiểm tra nhanh", desc: "Thử ảnh mẫu" },
+  { href: "/logs", label: "Nhật ký hệ thống", desc: "Tra lỗi kỹ thuật" },
 ];
 
 function NavItem({
@@ -94,9 +94,7 @@ export default function AppShell({
           <div className="rounded-[1.8rem] border border-sky-300/14 bg-[linear-gradient(145deg,rgba(81,186,255,0.18),rgba(6,16,26,0.18))] px-5 py-5">
             <div className="text-[11px] uppercase tracking-[0.34em] text-sky-100/80">Warehouse Supervisor</div>
             <div className="mt-3 text-2xl font-semibold text-white">Trung tâm giám sát kho</div>
-            <div className="mt-3 text-sm leading-6 text-slate-200">
-              Giao diện dành cho người trực ca để theo dõi camera, xác minh cảnh báo và lưu bằng chứng.
-            </div>
+            <div className="mt-3 text-sm leading-6 text-slate-200">Theo dõi camera và xử lý cảnh báo trong ca.</div>
           </div>
 
           <div className="mt-5">
@@ -131,9 +129,8 @@ export default function AppShell({
 
           <div className="mt-5 rounded-[1.7rem] border border-white/8 bg-white/5 px-5 py-5 text-sm text-slate-300">
             <div className="text-[11px] uppercase tracking-[0.32em] text-slate-500">Lưu ý trong ca trực</div>
-            <div className="mt-3 leading-6">Ưu tiên camera có cảnh báo hoặc mất kết nối trước khi kiểm tra các màn khác.</div>
-            <div className="mt-2 leading-6">Khi xác nhận sự kiện, nên mở ảnh hoặc clip để ghi chú rõ cho ca sau.</div>
-            <div className="mt-2 leading-6">Màn hình nhật ký và kiểm tra nhanh chỉ dùng khi cần xử lý lỗi kỹ thuật.</div>
+            <div className="mt-3 leading-6">Ưu tiên camera mất kết nối hoặc đang có cảnh báo.</div>
+            <div className="mt-2 leading-6">Xác minh xong thì lưu ghi chú ngắn cho ca sau.</div>
           </div>
         </aside>
 
@@ -143,9 +140,7 @@ export default function AppShell({
               <div className="min-w-0">
                 <div className="text-[10px] uppercase tracking-[0.34em] text-sky-100/80">Warehouse Supervisor</div>
                 <div className="mt-2 text-xl font-semibold text-white">Trực ca trên điện thoại</div>
-                <div className="mt-2 text-sm leading-6 text-slate-300">
-                  Theo dõi camera, xác minh cảnh báo và lưu bằng chứng ngay trên màn hình nhỏ.
-                </div>
+                <div className="mt-2 text-sm leading-6 text-slate-300">Theo dõi camera và xử lý cảnh báo ngay trên điện thoại.</div>
               </div>
               <div className="rounded-full border border-sky-300/25 bg-sky-300/12 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-sky-100">
                 Mobile

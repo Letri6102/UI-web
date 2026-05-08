@@ -88,29 +88,27 @@ export default function DashboardPage() {
   return (
     <AppShell
       title="Tổng quan ca trực"
-      subtitle="Theo dõi nhanh camera đang hoạt động, cảnh báo vừa phát sinh và các việc cần xử lý ngay trong ca. Mục tiêu của màn này là giúp người trực biết nên mở camera nào, xác minh sự kiện nào và khi nào cần chuyển tiếp cho bảo vệ."
+      subtitle="Xem nhanh tình trạng camera, cảnh báo mới và việc cần xử lý trong ca."
       right={<div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-200">{onlineCount}/{cameras.length} camera sẵn sàng</div>}
     >
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Camera hoạt động" value={`${onlineCount}/${cameras.length}`} hint={`${offlineCount} camera đang mất kết nối hoặc lỗi luồng.`} />
-        <StatCard label="Camera cần chú ý" value={alertCount} hint="Số camera đang có cảnh báo ở nhịp xử lý gần nhất." />
-        <StatCard label="Bằng chứng đã lưu" value={totalArchived} hint={`${autoCount} ảnh hoặc clip đã lưu, gồm ${carryCount} nghi mang vật và ${phoneCount} dùng điện thoại.`} />
-        <StatCard label="Chờ xác minh" value={pendingReview} hint="Các cảnh báo đang chờ người trực mở ảnh hoặc clip để chốt kết quả." />
+        <StatCard compact label="Camera hoạt động" value={`${onlineCount}/${cameras.length}`} hint={`${offlineCount} camera đang lỗi hoặc mất kết nối`} />
+        <StatCard compact label="Camera cần chú ý" value={alertCount} hint="Có cảnh báo trong nhịp gần nhất" />
+        <StatCard compact label="Bằng chứng đã lưu" value={totalArchived} hint={`${autoCount} mục, ${carryCount} mang vật, ${phoneCount} điện thoại`} />
+        <StatCard compact label="Chờ xác minh" value={pendingReview} hint="Sự kiện chưa chốt kết quả" />
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1.15fr_1fr]">
         <div className="rounded-[2rem] border border-white/10 bg-slate-950/72 p-6 shadow-[0_24px_70px_rgba(0,0,0,0.18)]">
           <div className="text-[11px] uppercase tracking-[0.34em] text-slate-500">Bắt đầu nhanh</div>
-          <div className="mt-3 text-2xl font-semibold text-white">Việc cần làm trong ca</div>
-          <div className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
-            Mở màn hình camera để kiểm tra khu vực đang có cảnh báo hoặc mất kết nối. Sau đó chuyển sang màn xử lý cảnh báo để xem ảnh, clip và ghi chú xác minh. Phần công cụ hỗ trợ chỉ dùng khi cần kiểm tra mô hình hoặc xử lý lỗi.
-          </div>
-          <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <NavCard href="/webcam" title="Mở màn hình camera" desc="Theo dõi trực tiếp luồng hình, tình trạng camera, ảnh gần nhất và cảnh báo theo từng khu vực." meta="Ưu tiên" />
-            <NavCard href="/events" title="Xử lý cảnh báo" desc="Mở ảnh hoặc clip, xác minh sự kiện và lưu ghi chú cho ca sau hoặc bảo vệ." meta="Xác minh" />
-            <NavCard href="/settings" title="Thiết lập camera" desc="Chỉnh vùng giám sát, ngưỡng cảnh báo và cấu hình clip ngay trên giao diện." meta="Thiết lập" />
-            <NavCard href="/upload" title="Kiểm tra nhanh ảnh mẫu" desc="Tải ảnh lên để xem thử phản hồi từ AI khi cần đối chiếu hoặc tinh chỉnh." meta="Hỗ trợ" />
-            <NavCard href="/logs" title="Xem nhật ký hệ thống" desc="Dành cho lúc cần kiểm tra lỗi kết nối, proxy hoặc hành vi bất thường của giao diện." meta="Kỹ thuật" />
+          <div className="mt-3 text-2xl font-semibold text-white">Việc cần làm</div>
+          <div className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">Mở camera trước. Có sự kiện thì sang xác minh. Thiết lập và kiểm tra nhanh chỉ dùng khi cần.</div>
+          <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <NavCard compact href="/webcam" title="Mở camera" desc="Xem luồng hình và trạng thái khu vực." meta="Ưu tiên" />
+            <NavCard compact href="/events" title="Xác minh cảnh báo" desc="Mở ảnh hoặc clip và chốt kết quả." meta="Xác minh" />
+            <NavCard compact href="/settings" title="Thiết lập" desc="Chỉnh vùng và ngưỡng cảnh báo." meta="Thiết lập" />
+            <NavCard compact href="/upload" title="Kiểm tra nhanh" desc="Thử ảnh mẫu với AI." meta="Hỗ trợ" />
+            <NavCard compact href="/logs" title="Nhật ký" desc="Tra lỗi khi cần." meta="Kỹ thuật" />
           </div>
         </div>
 
@@ -157,10 +155,8 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="text-[11px] uppercase tracking-[0.34em] text-slate-500">Cảnh báo mới</div>
-            <div className="mt-3 text-2xl font-semibold text-white">Sự kiện cần xem sớm</div>
-            <div className="mt-2 text-sm leading-6 text-slate-300">
-              Đây là các cảnh báo vừa được lưu vào kho bằng chứng. Người trực nên xác minh sớm để quyết định có cần chuyển cho bảo vệ hoặc quản lý kho hay không.
-            </div>
+            <div className="mt-3 text-2xl font-semibold text-white">Sự kiện mới</div>
+            <div className="mt-2 text-sm leading-6 text-slate-300">Ưu tiên mở các sự kiện vừa phát sinh để chốt nhanh trong ca.</div>
           </div>
         </div>
 

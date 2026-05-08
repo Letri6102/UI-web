@@ -5,11 +5,13 @@ export default function NavCard({
   title,
   desc,
   meta,
+  compact = false,
 }: {
   href: string;
   title: string;
   desc: string;
   meta?: string;
+  compact?: boolean;
 }) {
   return (
     <Link
@@ -19,7 +21,7 @@ export default function NavCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-lg font-semibold text-white group-hover:text-sky-100">{title}</div>
-          <div className="mt-3 text-sm leading-6 text-slate-300">{desc}</div>
+          <div className={`${compact ? "mt-2 leading-5" : "mt-3 leading-6"} text-sm text-slate-300`}>{desc}</div>
         </div>
         {meta ? (
           <span className="rounded-full border border-sky-300/30 bg-sky-300/12 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-sky-100">
