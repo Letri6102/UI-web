@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+:root {
+  --background: #06101a;
+  --foreground: #eff7ff;
+  --panel: rgba(6, 16, 26, 0.78);
+  --muted: #94a3b8;
+  --accent: #51baff;
+  --danger: #ff6f61;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+}
+
+html {
+  background:
+    radial-gradient(circle at top left, rgba(81, 186, 255, 0.18), transparent 24%),
+    radial-gradient(circle at top right, rgba(255, 111, 97, 0.14), transparent 22%),
+    linear-gradient(180deg, #08111a 0%, #07101a 48%, #04070c 100%);
+  color-scheme: dark;
+}
+
+body {
+  background: transparent;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overscroll-behavior-y: contain;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+img {
+  image-rendering: auto;
+}
+
+button,
+a,
+input,
+select {
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+textarea {
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+}
