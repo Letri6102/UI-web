@@ -66,7 +66,7 @@ export default function WebcamPage() {
   }, [loadCameras, refresh]);
 
   const onlineCount = useMemo(
-    () => cameras.filter((camera) => statusMap[camera.id]?.stream_ready && !statusMap[camera.id]?.stream_error).length,
+    () => cameras.filter((camera) => statusMap[camera.id]?.ai_active).length,
     [cameras, statusMap]
   );
   const alertCount = useMemo(
@@ -84,17 +84,17 @@ export default function WebcamPage() {
   return (
     <AppShell
       title="Màn hình camera"
-      subtitle="Theo dõi luồng hình đang hoạt động, phát hiện camera có cảnh báo hoặc mất kết nối và lưu bằng chứng nhanh ngay trong lúc trực ca."
+      subtitle="Xem camera thường qua WebRTC. Chỉ bật AI ở camera cần phân tích để giảm tải server."
       right={
         <div className="rounded-full border border-sky-300/25 bg-sky-300/12 px-4 py-2 text-sm text-sky-100">
-          {onlineCount}/{cameras.length} camera đang hoạt động
+          {onlineCount}/{cameras.length} camera đang bật AI
         </div>
       }
     >
       <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <StatCard label="Camera hoạt động" value={`${onlineCount}/${cameras.length}`} hint={loading ? "Đang tải trạng thái camera..." : "Các camera sẵn sàng phát hình và xử lý AI."} />
-        <StatCard label="Camera có cảnh báo" value={alertCount} hint="Nên mở trước các camera có cảnh báo mới phát sinh." />
-        <StatCard label="Độ trễ trung bình" value={`${avgLatency} ms`} hint="Giúp theo dõi chất lượng xử lý và độ mượt của luồng hiện tại." />
+        <StatCard label="AI đang chạy" value={`${onlineCount}/${cameras.length}`} hint={loading ? "Đang tải trạng thái..." : "Chỉ các camera đã bật AI mới dùng backend detect."} />
+        <StatCard label="Camera có cảnh báo" value={alertCount} hint="Ưu tiên mở các camera đang bật AI và có sự kiện." />
+        <StatCard label="Độ trễ AI" value={`${avgLatency} ms`} hint="Chỉ tính trên các camera đang bật AI." />
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -108,7 +108,7 @@ export default function WebcamPage() {
           <div className="text-[11px] uppercase tracking-[0.34em] text-slate-500">Cần xem ngay</div>
           <div className="mt-3 text-2xl font-semibold text-white">Cảnh báo vừa phát sinh</div>
           <div className="mt-2 text-sm leading-6 text-slate-300">
-            Dùng cột này để biết camera nào vừa phát hiện sự kiện tự động, sau đó chuyển sang màn xử lý cảnh báo để xem ảnh hoặc clip chi tiết.
+            Cột này chỉ có dữ liệu khi một camera đã bật AI và vừa phát hiện sự kiện.
           </div>
 
           <div className="mt-5 space-y-3">

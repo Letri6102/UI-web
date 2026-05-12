@@ -1,0 +1,7 @@
+{
+  "/webcam/page": "app/webcam/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/page": "app/page.js",
+  "/api/events/route": "app/api/events/route.js",
+  "/api/status-all/route": "app/api/status-all/route.js"
+}

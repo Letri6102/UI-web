@@ -57,6 +57,8 @@ export function toCameraConfig(item: BackendCameraItem): CameraConfig {
     wsChannel: item.camera_id,
     mediaPath: item.media_path || item.camera_id,
     mediaViewer: item.media_viewer === "mjpeg" ? "mjpeg" : "webrtc",
+    aiActive: Boolean(item.ai_active),
+    aiAutoStart: Boolean(item.ai_auto_start),
   };
 }
 

@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:clean": "rm -rf .next && next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "clean": "rm -rf .next",
     "ai": "cd ../AI && uvicorn app:app --host 127.0.0.1 --port 8000",
     "dev:all": "npx concurrently \"npm run ai\" \"npm run dev\""
   },

@@ -20,6 +20,8 @@ export type CameraConfig = {
   wsChannel?: string;
   mediaPath?: string;
   mediaViewer?: "webrtc" | "mjpeg";
+  aiActive?: boolean;
+  aiAutoStart?: boolean;
 };
 
 export type BackendCameraItem = {
@@ -28,6 +30,8 @@ export type BackendCameraItem = {
   location?: string;
   media_path?: string;
   media_viewer?: "webrtc" | "mjpeg" | string;
+  ai_active?: boolean;
+  ai_auto_start?: boolean;
 };
 
 export type RuntimeStatusSummary = {
@@ -122,6 +126,8 @@ export type CameraStatus = {
   latency_ms?: number;
   stream_ready?: boolean;
   stream_error?: string;
+  ai_active?: boolean;
+  ai_auto_start?: boolean;
   stream_source?: string;
   stream_frames?: number;
   stream_last_frame_ts?: number;

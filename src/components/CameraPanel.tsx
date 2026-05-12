@@ -30,16 +30,20 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [snapshotKey, setSnapshotKey] = useState(0);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiError, setAiError] = useState("");
   const [viewMode, setViewMode] = useState<"webrtc" | "mjpeg">(
     camera.mediaViewer === "webrtc" ? "webrtc" : "mjpeg"
   );
+  const aiActive = Boolean(status?.ai_active ?? camera.aiActive);
 
-  const isOffline = !status?.stream_ready || !!status?.stream_error;
+  const isOffline = aiActive && (!status?.stream_ready || !!status?.stream_error);
   const badge = useMemo(() => {
+    if (!aiActive) return { text: "Xem camera thường", className: "text-slate-100 bg-white/8 border-white/12" };
     if (isOffline) return { text: "Mất kết nối", className: "text-red-200 bg-red-500/12 border-red-500/30" };
     if (status?.alarm) return { text: "Cần chú ý", className: "text-amber-100 bg-amber-400/12 border-amber-400/30" };
-    return { text: "Bình thường", className: "text-emerald-100 bg-emerald-400/12 border-emerald-400/30" };
-  }, [isOffline, status?.alarm]);
+    return { text: "AI đang chạy", className: "text-emerald-100 bg-emerald-400/12 border-emerald-400/30" };
+  }, [aiActive, isOffline, status?.alarm]);
 
   const videoSrc = `${camera.streamPath}${camera.streamPath.includes("?") ? "&" : "?"}v=${reloadKey}`;
   const webrtcSrc = camera.mediaPath
@@ -77,6 +81,32 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
     }
   };
 
+  const setAiRuntime = async (active: boolean) => {
+    setAiBusy(true);
+    setAiError("");
+    try {
+      const res = await fetch(`/api/cameras/${encodeURIComponent(camera.id)}/ai-runtime`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data?.detail || data?.message || `HTTP ${res.status}`);
+      }
+      if (active) {
+        setViewMode("mjpeg");
+      } else {
+        setViewMode("webrtc");
+      }
+      onSaved?.();
+    } catch (error: unknown) {
+      setAiError(getErrorMessage(error));
+    } finally {
+      setAiBusy(false);
+    }
+  };
+
   return (
     <article className="overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/72 shadow-[0_25px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl">
       <div className="flex flex-col gap-4 border-b border-white/8 px-4 py-4 md:flex-row md:items-start md:justify-between md:px-6 md:py-5">
@@ -91,20 +121,37 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
       <div className="grid grid-cols-1 gap-0 xl:grid-cols-[minmax(0,1.35fr)_360px]">
         <div className="border-b border-white/8 xl:border-b-0 xl:border-r">
           <div className="relative min-h-[220px] bg-black sm:min-h-[280px] xl:min-h-[320px]">
-            {!isOffline && viewMode === "webrtc" && webrtcSrc ? (
+            {viewMode === "webrtc" && webrtcSrc ? (
               <iframe
                 src={webrtcSrc}
-                title={`${camera.id} WebRTC`}
+                title={`${camera.id} Camera View`}
                 className="block h-full min-h-[220px] w-full border-0 sm:min-h-[280px] xl:min-h-[320px]"
                 allow="autoplay; fullscreen; picture-in-picture"
               />
-            ) : !isOffline ? (
+            ) : viewMode === "mjpeg" && aiActive ? (
               <img
                 src={videoSrc}
                 alt={camera.id}
                 className="block h-full min-h-[220px] w-full object-cover sm:min-h-[280px] xl:min-h-[320px]"
                 onError={() => setReloadKey((v) => v + 1)}
               />
+            ) : viewMode === "mjpeg" ? (
+              <div className="flex min-h-[220px] flex-col justify-center px-5 py-8 text-left sm:min-h-[280px] sm:px-8 sm:py-10 xl:min-h-[320px]">
+                <div className="mb-4 text-2xl font-semibold text-sky-100 sm:text-3xl">AI đang tắt</div>
+                <div className="mb-3 text-lg font-medium text-white sm:text-xl">Camera vẫn xem bình thường qua luồng camera</div>
+                <div className="mb-5 text-base leading-7 text-slate-300">
+                  Chỉ khi bật AI thì backend mới mở RTSP và chạy phát hiện để giảm tải server.
+                </div>
+                <div>
+                  <button
+                    onClick={() => void setAiRuntime(true)}
+                    disabled={aiBusy}
+                    className="rounded-2xl border border-sky-300/30 bg-sky-300/12 px-4 py-3 text-sm font-medium text-sky-100 hover:bg-sky-300/18 disabled:opacity-50"
+                  >
+                    {aiBusy ? "Đang bật AI..." : "Bật AI cho camera này"}
+                  </button>
+                </div>
+              </div>
             ) : (
               <div className="flex min-h-[220px] flex-col justify-center px-5 py-8 text-left sm:min-h-[280px] sm:px-8 sm:py-10 xl:min-h-[320px]">
                 <div className="mb-4 text-2xl font-semibold text-red-300 sm:text-3xl">Camera {camera.id}</div>
@@ -147,18 +194,34 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
                       : "border-white/10 text-slate-100 hover:bg-white/5"
                   }`}
                 >
-                  Xem WebRTC
+                  Xem camera
                 </button>
                 <button
-                  onClick={() => setViewMode("mjpeg")}
+                  onClick={() => {
+                    if (!aiActive) {
+                      void setAiRuntime(true);
+                      return;
+                    }
+                    setViewMode("mjpeg");
+                  }}
+                  disabled={aiBusy}
                   className={`rounded-2xl border px-4 py-3 text-sm font-medium ${
                     viewMode === "mjpeg"
                       ? "border-sky-300/30 bg-sky-300/12 text-sky-100"
                       : "border-white/10 text-slate-100 hover:bg-white/5"
                   }`}
                 >
-                  Xem luồng AI
+                  {!aiActive ? (aiBusy ? "Đang bật AI..." : "Bật AI") : "Xem AI"}
                 </button>
+                {aiActive ? (
+                  <button
+                    onClick={() => void setAiRuntime(false)}
+                    disabled={aiBusy}
+                    className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-medium text-slate-100 hover:bg-white/5 disabled:opacity-50"
+                  >
+                    {aiBusy ? "Đang tắt..." : "Tắt AI"}
+                  </button>
+                ) : null}
               </>
             ) : null}
             <button
@@ -174,20 +237,27 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
             >
               {saving ? "Đang lưu..." : "Lưu bằng chứng"}
             </button>
-            {!!saveError && <div className="sm:col-span-2 md:basis-full md:self-center text-sm text-amber-300">{saveError}</div>}
+            {!!saveError && <div className="text-sm text-amber-300 sm:col-span-2 md:basis-full md:self-center">{saveError}</div>}
+            {!!aiError && <div className="text-sm text-amber-300 sm:col-span-2 md:basis-full md:self-center">{aiError}</div>}
           </div>
         </div>
 
         <aside className="space-y-4 px-4 py-4 sm:px-5 md:px-6 md:py-5">
           <div className="rounded-[1.5rem] border border-white/8 bg-white/5 p-4">
             <div className="text-[11px] uppercase tracking-[0.28em] text-slate-500">Thông tin xử lý</div>
-            <div className="mt-3 space-y-2 text-sm text-slate-300">
-              <div>Độ trễ: <span className="text-white">{status?.latency_ms ?? 0} ms</span></div>
-              <div>Cập nhật frame: <span className="text-white">{status?.stream_last_frame_ts ? fmtDateTime(status.stream_last_frame_ts * 1000) : "--"}</span></div>
-              <div>Frame đã xử lý: <span className="text-white">{status?.processed_frames ?? 0}</span></div>
-              <div>Frame bỏ qua: <span className="text-white">{status?.skipped_frames ?? 0}</span></div>
-              {!!status?.stream_error && <div className="pt-1 text-red-200">Lỗi: {formatError(status.stream_error)}</div>}
-            </div>
+            {!aiActive ? (
+              <div className="mt-3 text-sm leading-6 text-slate-300">
+                AI đang tắt. Camera này chỉ phát luồng xem thường. Bật AI khi cần phát hiện và lưu sự kiện.
+              </div>
+            ) : (
+              <div className="mt-3 space-y-2 text-sm text-slate-300">
+                <div>Độ trễ: <span className="text-white">{status?.latency_ms ?? 0} ms</span></div>
+                <div>Cập nhật frame: <span className="text-white">{status?.stream_last_frame_ts ? fmtDateTime(status.stream_last_frame_ts * 1000) : "--"}</span></div>
+                <div>Frame đã xử lý: <span className="text-white">{status?.processed_frames ?? 0}</span></div>
+                <div>Frame bỏ qua: <span className="text-white">{status?.skipped_frames ?? 0}</span></div>
+                {!!status?.stream_error && <div className="pt-1 text-red-200">Lỗi: {formatError(status.stream_error)}</div>}
+              </div>
+            )}
           </div>
 
           <div className="rounded-[1.5rem] border border-white/8 bg-white/5 p-4">
