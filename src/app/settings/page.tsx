@@ -18,6 +18,7 @@ function toNumber(value: string, fallback?: number) {
 
 export default function SettingsPage() {
   const [configs, setConfigs] = useState<CameraTuningConfig[]>([]);
+  const [serverTimezone, setServerTimezone] = useState("Asia/Ho_Chi_Minh");
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [errorText, setErrorText] = useState("");
@@ -31,6 +32,7 @@ export default function SettingsPage() {
         throw new Error(`HTTP ${res.status}`);
       }
       const data = (await res.json()) as BackendCameraConfigsResponse;
+      setServerTimezone(data.server_timezone || "Asia/Ho_Chi_Minh");
       setConfigs(Array.isArray(data.items) ? data.items : []);
     } catch (error: unknown) {
       setConfigs([]);
@@ -125,6 +127,11 @@ export default function SettingsPage() {
           value={loading ? "Đang đồng bộ..." : `${healthyGroups}/${groupSnapshots.length || 0}`}
           hint={errorText || "Theo dõi trực tiếp sức khỏe từng worker xử lý để phát hiện nghẽn nhóm camera."}
         />
+      </section>
+
+      <section className="rounded-[1.7rem] border border-sky-300/20 bg-sky-300/8 px-5 py-4 text-sm text-sky-50">
+        Lịch bật AI đang chạy theo giờ server <span className="font-semibold">{serverTimezone}</span>. Nếu camera có đặt khung giờ,
+        hệ thống sẽ tự bật hoặc tắt AI theo lịch này và sẽ ghi đè trạng thái bật tay sau vài giây đồng bộ.
       </section>
 
       {groupSnapshots.length > 0 ? (
@@ -298,6 +305,70 @@ export default function SettingsPage() {
                       <div className="mt-1 text-base text-white">
                         {camera.runtime_status?.group_status?.inflight_requests ?? 0}/{camera.runtime_status?.group_status?.queue_limit ?? 0}
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-[1.5rem] border border-white/8 bg-white/5 p-4">
+                  <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Lịch bật AI</div>
+                  <div className="mt-3 grid grid-cols-1 gap-3">
+                    <label className="flex items-center gap-3 rounded-2xl border border-white/8 bg-slate-950/65 px-4 py-3 text-sm text-slate-200">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(camera.ai_schedule?.enabled)}
+                        onChange={(e) =>
+                          updateConfig(camera.id, (item) => ({
+                            ...item,
+                            ai_schedule: {
+                              enabled: e.target.checked,
+                              start: item.ai_schedule?.start || "08:00",
+                              end: item.ai_schedule?.end || "17:00",
+                            },
+                          }))
+                        }
+                      />
+                      <span>Tự bật AI theo khung giờ</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="space-y-2 text-sm text-slate-300">
+                        <div>Giờ bắt đầu</div>
+                        <input
+                          type="time"
+                          value={camera.ai_schedule?.start || ""}
+                          onChange={(e) =>
+                            updateConfig(camera.id, (item) => ({
+                              ...item,
+                              ai_schedule: {
+                                enabled: Boolean(item.ai_schedule?.enabled),
+                                start: e.target.value,
+                                end: item.ai_schedule?.end || "",
+                              },
+                            }))
+                          }
+                          className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none"
+                        />
+                      </label>
+                      <label className="space-y-2 text-sm text-slate-300">
+                        <div>Giờ kết thúc</div>
+                        <input
+                          type="time"
+                          value={camera.ai_schedule?.end || ""}
+                          onChange={(e) =>
+                            updateConfig(camera.id, (item) => ({
+                              ...item,
+                              ai_schedule: {
+                                enabled: Boolean(item.ai_schedule?.enabled),
+                                start: item.ai_schedule?.start || "",
+                                end: e.target.value,
+                              },
+                            }))
+                          }
+                          className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none"
+                        />
+                      </label>
+                    </div>
+                    <div className="rounded-2xl border border-white/8 bg-slate-950/65 px-4 py-3 text-sm text-slate-400">
+                      Ví dụ đặt `12:00` đến `13:00` thì AI của camera này chỉ detect trong khung giờ đó theo giờ server.
                     </div>
                   </div>
                 </div>

@@ -40,3 +40,30 @@ export async function PATCH(req: Request, context: RouteContext) {
     );
   }
 }
+
+export async function DELETE(_req: Request, context: RouteContext) {
+  try {
+    const AI_SERVER = getAiServerBaseUrl();
+    const { eventId } = await context.params;
+
+    const upstream = await fetch(`${AI_SERVER}/events/${encodeURIComponent(eventId)}`, {
+      method: "DELETE",
+      cache: "no-store",
+    });
+
+    const text = await upstream.text();
+
+    return new NextResponse(text, {
+      status: upstream.status,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Cache-Control": "no-store",
+      },
+    });
+  } catch (error: unknown) {
+    return NextResponse.json(
+      { detail: getErrorMessage(error) },
+      { status: 502 }
+    );
+  }
+}

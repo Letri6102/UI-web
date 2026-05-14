@@ -15,7 +15,9 @@ import {
 type Props = {
   event: EventCapture;
   reviewBusy?: boolean;
+  deleteBusy?: boolean;
   onReviewChange?: (status: EventReviewStatus, note: string) => Promise<void> | void;
+  onDelete?: () => Promise<void> | void;
 };
 
 const REVIEW_ACTIONS: Array<{ status: EventReviewStatus; label: string }> = [
@@ -24,8 +26,15 @@ const REVIEW_ACTIONS: Array<{ status: EventReviewStatus; label: string }> = [
   { status: "needs_review", label: "Xem lại" },
 ];
 
-export default function EventCaptureCard({ event, reviewBusy = false, onReviewChange }: Props) {
+export default function EventCaptureCard({
+  event,
+  reviewBusy = false,
+  deleteBusy = false,
+  onReviewChange,
+  onDelete,
+}: Props) {
   const [noteDraft, setNoteDraft] = useState(() => event.reviewNote || "");
+  const [showClip, setShowClip] = useState(false);
 
   const currentReviewStatus = (event.reviewStatus || "pending") as EventReviewStatus;
   const noteDirty = noteDraft.trim() !== String(event.reviewNote || "").trim();
@@ -153,14 +162,13 @@ export default function EventCaptureCard({ event, reviewBusy = false, onReviewCh
             </a>
           ) : null}
           {event.clipUrl ? (
-            <a
-              href={event.clipUrl}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={() => setShowClip((value) => !value)}
               className="inline-flex items-center justify-center rounded-2xl border border-emerald-400/25 bg-emerald-400/12 px-3 py-3 text-sm text-emerald-100 hover:bg-emerald-400/18"
             >
-              Mở clip
-            </a>
+              {showClip ? "Ẩn clip" : "Xem clip"}
+            </button>
           ) : null}
           {event.clipUrl ? (
             <a
@@ -171,7 +179,34 @@ export default function EventCaptureCard({ event, reviewBusy = false, onReviewCh
               Tải clip
             </a>
           ) : null}
+          <button
+            onClick={() => {
+              if (!onDelete) return;
+              if (typeof window !== "undefined") {
+                const accepted = window.confirm("Xoá ảnh và clip của cảnh báo này khỏi kho lưu trữ?");
+                if (!accepted) return;
+              }
+              void onDelete();
+            }}
+            disabled={!onDelete || deleteBusy}
+            className="col-span-2 inline-flex items-center justify-center rounded-2xl border border-red-400/25 bg-red-500/10 px-3 py-3 text-sm text-red-100 hover:bg-red-500/16 disabled:opacity-50 sm:col-auto"
+          >
+            {deleteBusy ? "Đang xoá..." : "Xoá khỏi kho"}
+          </button>
         </div>
+        {event.clipUrl && showClip ? (
+          <div className="overflow-hidden rounded-[1.4rem] border border-white/8 bg-black">
+            <video
+              controls
+              preload="metadata"
+              playsInline
+              className="block aspect-video w-full"
+              src={event.clipUrl}
+            >
+              Trình duyệt không phát được clip này.
+            </video>
+          </div>
+        ) : null}
       </div>
     </article>
   );

@@ -58,6 +58,7 @@ export default function EventsPage() {
   const [errorText, setErrorText] = useState("");
   const [summary, setSummary] = useState<BackendEventsResponse["summary"]>();
   const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [authRequired, setAuthRequired] = useState(false);
   const [operatorName, setOperatorName] = useState<string>(() =>
     typeof window === "undefined" ? "" : window.localStorage.getItem("warehouse-review-operator") || ""
@@ -152,6 +153,30 @@ export default function EventsPage() {
       }
     },
     [authToken, operatorName, refresh]
+  );
+
+  const handleDelete = useCallback(
+    async (eventId: string) => {
+      setDeletingId(eventId);
+      setErrorText("");
+      try {
+        const res = await fetch(`/api/events/${eventId}`, {
+          method: "DELETE",
+        });
+        const data = (await res.json().catch(() => ({}))) as { detail?: string };
+        if (!res.ok) {
+          throw new Error(data.detail || `HTTP ${res.status}`);
+        }
+
+        setEvents((prev) => prev.filter((event) => event.id !== eventId));
+        void refresh({ silent: true });
+      } catch (error: unknown) {
+        setErrorText(getErrorMessage(error));
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [refresh]
   );
 
   const handleLogin = useCallback(async () => {
@@ -424,7 +449,9 @@ export default function EventsPage() {
               key={`${event.id}:${event.reviewStatus || "pending"}:${event.reviewedAt || 0}:${event.reviewNote || ""}`}
               event={event}
               reviewBusy={reviewingId === event.id}
+              deleteBusy={deletingId === event.id}
               onReviewChange={(status, note) => handleReviewChange(event.id, status, note)}
+              onDelete={() => handleDelete(event.id)}
             />
           ))
         )}

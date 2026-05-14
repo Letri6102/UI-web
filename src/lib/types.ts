@@ -32,6 +32,8 @@ export type BackendCameraItem = {
   media_viewer?: "hls" | "webrtc" | "mjpeg" | string;
   ai_active?: boolean;
   ai_auto_start?: boolean;
+  ai_schedule_enabled?: boolean;
+  ai_schedule_active?: boolean;
 };
 
 export type RuntimeStatusSummary = {
@@ -98,6 +100,12 @@ export type CameraPhoneDetectorConfig = {
   event_cooldown_sec?: number;
 };
 
+export type CameraAiScheduleConfig = {
+  enabled?: boolean;
+  start?: string;
+  end?: string;
+};
+
 export type CameraTuningConfig = {
   id: string;
   name: string;
@@ -108,6 +116,7 @@ export type CameraTuningConfig = {
   rtsp_transport?: string;
   target_fps?: number;
   process_fps?: number;
+  ai_schedule?: CameraAiScheduleConfig;
   carry_guard?: CameraCarryGuardConfig;
   phone_detector?: CameraPhoneDetectorConfig;
   archive?: CameraArchiveConfig;
@@ -128,6 +137,8 @@ export type CameraStatus = {
   stream_error?: string;
   ai_active?: boolean;
   ai_auto_start?: boolean;
+  ai_schedule_enabled?: boolean;
+  ai_schedule_active?: boolean;
   stream_source?: string;
   stream_frames?: number;
   stream_last_frame_ts?: number;
@@ -204,6 +215,7 @@ export type BackendEventsResponse = {
 
 export type BackendCameraConfigsResponse = {
   ok: boolean;
+  server_timezone?: string;
   items: CameraTuningConfig[];
 };
 

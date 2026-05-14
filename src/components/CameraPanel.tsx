@@ -30,6 +30,7 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
   const [reloadKey, setReloadKey] = useState(0);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState("");
   const [snapshotKey, setSnapshotKey] = useState(0);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState("");
@@ -37,6 +38,8 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
     camera.mediaViewer === "mjpeg" ? "mjpeg" : "hls"
   );
   const aiActive = Boolean(status?.ai_active ?? camera.aiActive);
+  const canReturnToAi = aiActive && viewMode === "hls";
+  const cameraViewLabel = canReturnToAi ? "Quay lại AI" : "Xem camera";
 
   const isOffline = aiActive && (!status?.stream_ready || !!status?.stream_error);
   const badge = useMemo(() => {
@@ -65,6 +68,7 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
   const saveEvent = async () => {
     setSaving(true);
     setSaveError("");
+    setSaveSuccess("");
     try {
       const res = await fetch(`/api/events/save?camera_id=${encodeURIComponent(camera.id)}`, {
         method: "POST",
@@ -74,6 +78,7 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
         throw new Error(data?.detail || data?.message || `HTTP ${res.status}`);
       }
       setSnapshotKey((v) => v + 1);
+      setSaveSuccess("Đã lưu bằng chứng.");
       onSaved?.();
     } catch (error: unknown) {
       setSaveError(getErrorMessage(error));
@@ -186,41 +191,22 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
             {camera.mediaPath ? (
               <>
                 <button
-                  onClick={() => setViewMode("hls")}
+                  onClick={() => setViewMode(canReturnToAi ? "mjpeg" : "hls")}
                   className={`rounded-2xl border px-4 py-3 text-sm font-medium ${
-                    viewMode === "hls"
+                    viewMode === "hls" || canReturnToAi
                       ? "border-sky-300/30 bg-sky-300/12 text-sky-100"
                       : "border-white/10 text-slate-100 hover:bg-white/5"
                   }`}
                 >
-                  Xem camera
+                  {cameraViewLabel}
                 </button>
                 <button
-                  onClick={() => {
-                    if (!aiActive) {
-                      void setAiRuntime(true);
-                      return;
-                    }
-                    setViewMode("mjpeg");
-                  }}
+                  onClick={() => void setAiRuntime(aiActive ? false : true)}
                   disabled={aiBusy}
-                  className={`rounded-2xl border px-4 py-3 text-sm font-medium ${
-                    viewMode === "mjpeg"
-                      ? "border-sky-300/30 bg-sky-300/12 text-sky-100"
-                      : "border-white/10 text-slate-100 hover:bg-white/5"
-                  }`}
+                  className="rounded-2xl border px-4 py-3 text-sm font-medium text-slate-100 hover:bg-white/5 disabled:opacity-50 border-white/10"
                 >
-                  {!aiActive ? (aiBusy ? "Đang bật AI..." : "Bật AI") : "Xem AI"}
+                  {!aiActive ? (aiBusy ? "Đang bật AI..." : "Bật AI") : aiBusy ? "Đang tắt..." : "Tắt AI"}
                 </button>
-                {aiActive ? (
-                  <button
-                    onClick={() => void setAiRuntime(false)}
-                    disabled={aiBusy}
-                    className="rounded-2xl border border-white/10 px-4 py-3 text-sm font-medium text-slate-100 hover:bg-white/5 disabled:opacity-50"
-                  >
-                    {aiBusy ? "Đang tắt..." : "Tắt AI"}
-                  </button>
-                ) : null}
               </>
             ) : null}
             <button
@@ -236,6 +222,7 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
             >
               {saving ? "Đang lưu..." : "Lưu bằng chứng"}
             </button>
+            {!!saveSuccess && <div className="text-sm text-emerald-300 sm:col-span-2 md:basis-full md:self-center">{saveSuccess}</div>}
             {!!saveError && <div className="text-sm text-amber-300 sm:col-span-2 md:basis-full md:self-center">{saveError}</div>}
             {!!aiError && <div className="text-sm text-amber-300 sm:col-span-2 md:basis-full md:self-center">{aiError}</div>}
           </div>
