@@ -16,7 +16,7 @@ export const CAMERAS: CameraConfig[] = [
     snapshotPath: "/api/snapshot?camera_id=cam-01",
     wsChannel: "cam-01",
     mediaPath: "cam-01",
-    mediaViewer: "webrtc",
+    mediaViewer: "hls",
   },
   {
     id: "cam-02",
@@ -27,7 +27,7 @@ export const CAMERAS: CameraConfig[] = [
     snapshotPath: "/api/snapshot?camera_id=cam-02",
     wsChannel: "cam-02",
     mediaPath: "cam-02",
-    mediaViewer: "webrtc",
+    mediaViewer: "hls",
   },
   {
     id: "cam-03",
@@ -38,7 +38,7 @@ export const CAMERAS: CameraConfig[] = [
     snapshotPath: "/api/snapshot?camera_id=cam-03",
     wsChannel: "cam-03",
     mediaPath: "cam-03",
-    mediaViewer: "webrtc",
+    mediaViewer: "hls",
   },
 ];
 
@@ -56,7 +56,7 @@ export function toCameraConfig(item: BackendCameraItem): CameraConfig {
     snapshotPath: `/api/snapshot?camera_id=${encodeURIComponent(item.camera_id)}`,
     wsChannel: item.camera_id,
     mediaPath: item.media_path || item.camera_id,
-    mediaViewer: item.media_viewer === "mjpeg" ? "mjpeg" : "webrtc",
+    mediaViewer: item.media_viewer === "mjpeg" ? "mjpeg" : "hls",
     aiActive: Boolean(item.ai_active),
     aiAutoStart: Boolean(item.ai_auto_start),
   };

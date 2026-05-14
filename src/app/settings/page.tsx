@@ -515,24 +515,24 @@ export default function SettingsPage() {
                     <label className="space-y-2 text-sm text-slate-300">
                       <div>Chế độ xem</div>
                       <select
-                        value={camera.media?.viewer || "webrtc"}
+                        value={camera.media?.viewer || "hls"}
                         onChange={(e) =>
                           updateConfig(camera.id, (item) => ({
                             ...item,
                             media: {
                               ...(item.media || {}),
-                              viewer: e.target.value as "webrtc" | "mjpeg",
+                              viewer: e.target.value as "hls" | "webrtc" | "mjpeg",
                             },
                           }))
                         }
                         className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white"
                       >
-                        <option value="webrtc">WebRTC</option>
+                        <option value="hls">HLS</option>
                         <option value="mjpeg">MJPEG fallback</option>
                       </select>
                     </label>
                     <div className="rounded-2xl border border-white/8 bg-slate-950/65 px-4 py-3 text-sm text-slate-400">
-                      Mỗi camera sẽ map sang `http://MEDIA_MTX_HOST:8889/{camera.media?.path || camera.id}` theo player WebRTC của MediaMTX.
+                      Mỗi camera sẽ map sang `http://MEDIA_MTX_HOST:8888/{camera.media?.path || camera.id}/index.m3u8` theo HLS của MediaMTX.
                     </div>
                   </div>
                 </div>

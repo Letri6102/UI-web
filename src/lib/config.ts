@@ -2,6 +2,10 @@ function trimTrailingSlash(value: string) {
   return value.replace(/\/+$/, "");
 }
 
+function replacePort(value: string, fromPort: string, toPort: string) {
+  return value.replace(new RegExp(`:${fromPort}(?=$|/)`), `:${toPort}`);
+}
+
 function resolveBrowserOrigin() {
   if (typeof window === "undefined") {
     return "";
@@ -40,17 +44,21 @@ function resolveBackendWs() {
   return `${httpBase}/ws/events`;
 }
 
-function resolveMediaMtxBase() {
-  const configured = process.env.NEXT_PUBLIC_MEDIA_MTX_WEBRTC_BASE?.trim();
+function resolveMediaMtxHlsBase() {
+  const configured = process.env.NEXT_PUBLIC_MEDIA_MTX_HLS_BASE?.trim();
   if (configured) {
     return trimTrailingSlash(configured);
   }
+  const legacyWebrtc = process.env.NEXT_PUBLIC_MEDIA_MTX_WEBRTC_BASE?.trim();
+  if (legacyWebrtc) {
+    return trimTrailingSlash(replacePort(legacyWebrtc, "8889", "8888"));
+  }
   if (process.env.NODE_ENV !== "production") {
-    return "http://127.0.0.1:8889";
+    return "http://127.0.0.1:8888";
   }
   return resolveBrowserOrigin();
 }
 
 export const BACKEND_HTTP = resolveBackendHttp();
 export const BACKEND_WS = resolveBackendWs();
-export const MEDIA_MTX_WEBRTC_BASE = resolveMediaMtxBase();
+export const MEDIA_MTX_HLS_BASE = resolveMediaMtxHlsBase();

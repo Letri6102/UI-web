@@ -19,7 +19,7 @@ export type CameraConfig = {
   snapshotPath?: string;
   wsChannel?: string;
   mediaPath?: string;
-  mediaViewer?: "webrtc" | "mjpeg";
+  mediaViewer?: "hls" | "webrtc" | "mjpeg";
   aiActive?: boolean;
   aiAutoStart?: boolean;
 };
@@ -29,7 +29,7 @@ export type BackendCameraItem = {
   name: string;
   location?: string;
   media_path?: string;
-  media_viewer?: "webrtc" | "mjpeg" | string;
+  media_viewer?: "hls" | "webrtc" | "mjpeg" | string;
   ai_active?: boolean;
   ai_auto_start?: boolean;
 };
@@ -73,7 +73,7 @@ export type CameraArchiveConfig = {
 export type CameraMediaConfig = {
   enabled?: boolean;
   path?: string;
-  viewer?: "webrtc" | "mjpeg";
+  viewer?: "hls" | "webrtc" | "mjpeg";
 };
 
 export type CameraCarryGuardConfig = {

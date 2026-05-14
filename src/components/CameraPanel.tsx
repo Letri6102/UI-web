@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { MEDIA_MTX_WEBRTC_BASE } from "@/lib/config";
+import HlsPlayer from "@/components/HlsPlayer";
+import { MEDIA_MTX_HLS_BASE } from "@/lib/config";
 import { CameraConfig, CameraStatus } from "@/lib/types";
 import { getErrorMessage } from "@/lib/errors";
 import { eventLabel, eventTone, fmtDateTime, formatPercent } from "@/lib/format";
@@ -32,8 +33,8 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
   const [snapshotKey, setSnapshotKey] = useState(0);
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState("");
-  const [viewMode, setViewMode] = useState<"webrtc" | "mjpeg">(
-    camera.mediaViewer === "webrtc" ? "webrtc" : "mjpeg"
+  const [viewMode, setViewMode] = useState<"hls" | "mjpeg">(
+    camera.mediaViewer === "mjpeg" ? "mjpeg" : "hls"
   );
   const aiActive = Boolean(status?.ai_active ?? camera.aiActive);
 
@@ -46,8 +47,8 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
   }, [aiActive, isOffline, status?.alarm]);
 
   const videoSrc = `${camera.streamPath}${camera.streamPath.includes("?") ? "&" : "?"}v=${reloadKey}`;
-  const webrtcSrc = camera.mediaPath
-    ? `${MEDIA_MTX_WEBRTC_BASE.replace(/\/$/, "")}/${encodeURIComponent(camera.mediaPath)}`
+  const hlsSrc = camera.mediaPath
+    ? `${MEDIA_MTX_HLS_BASE.replace(/\/$/, "")}/${encodeURIComponent(camera.mediaPath)}/index.m3u8`
     : "";
   const snapshotSrc = camera.snapshotPath
     ? `${camera.snapshotPath}${camera.snapshotPath.includes("?") ? "&" : "?"}v=${snapshotKey}`
@@ -97,7 +98,7 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
       if (active) {
         setViewMode("mjpeg");
       } else {
-        setViewMode("webrtc");
+        setViewMode("hls");
       }
       onSaved?.();
     } catch (error: unknown) {
@@ -121,12 +122,10 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
       <div className="grid grid-cols-1 gap-0 xl:grid-cols-[minmax(0,1.35fr)_360px]">
         <div className="border-b border-white/8 xl:border-b-0 xl:border-r">
           <div className="relative min-h-[220px] bg-black sm:min-h-[280px] xl:min-h-[320px]">
-            {viewMode === "webrtc" && webrtcSrc ? (
-              <iframe
-                src={webrtcSrc}
-                title={`${camera.id} Camera View`}
-                className="block h-full min-h-[220px] w-full border-0 sm:min-h-[280px] xl:min-h-[320px]"
-                allow="autoplay; fullscreen; picture-in-picture"
+            {viewMode === "hls" && hlsSrc ? (
+              <HlsPlayer
+                src={`${hlsSrc}${hlsSrc.includes("?") ? "&" : "?"}v=${reloadKey}`}
+                className="block h-full min-h-[220px] w-full object-cover sm:min-h-[280px] xl:min-h-[320px]"
               />
             ) : viewMode === "mjpeg" && aiActive ? (
               <img
@@ -187,9 +186,9 @@ export default function CameraPanel({ camera, status, onSaved }: Props) {
             {camera.mediaPath ? (
               <>
                 <button
-                  onClick={() => setViewMode("webrtc")}
+                  onClick={() => setViewMode("hls")}
                   className={`rounded-2xl border px-4 py-3 text-sm font-medium ${
-                    viewMode === "webrtc"
+                    viewMode === "hls"
                       ? "border-sky-300/30 bg-sky-300/12 text-sky-100"
                       : "border-white/10 text-slate-100 hover:bg-white/5"
                   }`}
