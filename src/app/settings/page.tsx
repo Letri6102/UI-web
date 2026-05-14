@@ -317,7 +317,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[1.5rem] border border-white/8 bg-white/5 p-4">
+                <div className="rounded-[1.5rem] border border-white/8 bg-white/5 p-4 xl:col-span-2">
                   <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Lịch bật AI</div>
                   <div className="mt-3 grid grid-cols-1 gap-3">
                     <label className="flex items-center gap-3 rounded-2xl border border-white/8 bg-slate-950/65 px-4 py-3 text-sm text-slate-200">
@@ -343,7 +343,7 @@ export default function SettingsPage() {
                         Ngoài khung giờ đó, AI sẽ tự tắt để giảm tải máy.
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 2xl:grid-cols-2">
                       <ScheduleTimeField
                         label="Giờ bắt đầu"
                         value={camera.ai_schedule?.start || ""}
@@ -375,7 +375,7 @@ export default function SettingsPage() {
                         }
                       />
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="-mx-1 flex snap-x gap-2 overflow-x-auto px-1 pb-1">
                       {SCHEDULE_PRESETS.map((preset) => (
                         <button
                           key={preset.label}
@@ -390,7 +390,7 @@ export default function SettingsPage() {
                               },
                             }))
                           }
-                          className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
+                          className="shrink-0 snap-start rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
                         >
                           {preset.label}
                         </button>

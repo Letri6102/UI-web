@@ -84,20 +84,20 @@ export default function ScheduleTimeField({
   }
 
   return (
-    <div className={`rounded-[1.35rem] border border-white/8 bg-slate-950/55 p-3 ${disabled ? "opacity-60" : ""}`}>
-      <div className="flex items-center justify-between gap-3">
+    <div className={`overflow-hidden rounded-[1.35rem] border border-white/8 bg-slate-950/55 p-3 ${disabled ? "opacity-60" : ""}`}>
+      <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
         <div className="text-sm text-slate-200">{label}</div>
         <button
           type="button"
           disabled={disabled}
           onClick={() => setOpen((prev) => !prev)}
-          className="rounded-full border border-sky-300/18 bg-sky-300/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em] text-sky-100 transition hover:bg-sky-300/18 disabled:cursor-not-allowed"
+          className="rounded-full border border-sky-300/18 bg-sky-300/10 px-3 py-1 text-xs font-medium text-sky-100 transition hover:bg-sky-300/18 disabled:cursor-not-allowed"
         >
-          {open ? "Ẩn list" : "Chọn nhanh"}
+          {open ? "Đóng" : "Chọn nhanh"}
         </button>
       </div>
 
-      <div className="mt-3 flex items-center gap-2">
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
         <input
           value={draft}
           disabled={disabled}
@@ -111,7 +111,7 @@ export default function ScheduleTimeField({
           type="button"
           disabled={disabled}
           onClick={() => applyTime("00", "00")}
-          className="rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed"
+          className="rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed sm:min-w-[88px]"
         >
           00:00
         </button>
@@ -119,17 +119,17 @@ export default function ScheduleTimeField({
 
       {open ? (
         <div className="mt-3 rounded-[1.25rem] border border-white/8 bg-slate-950/80 p-3 shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 2xl:grid-cols-2">
             <div>
               <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Giờ</div>
-              <div className="mt-2 grid max-h-40 grid-cols-4 gap-2 overflow-y-auto pr-1 scroll-smooth">
+              <div className="mt-2 grid max-h-40 grid-cols-6 gap-2 overflow-y-auto pr-1 scroll-smooth">
                 {HOUR_OPTIONS.map((option) => (
                   <button
                     key={option}
                     type="button"
                     disabled={disabled}
                     onClick={() => applyTime(option, minute)}
-                    className={`rounded-xl border px-3 py-2 text-sm transition ${
+                    className={`rounded-xl border px-2 py-2 text-sm transition ${
                       hour === option
                         ? "border-sky-300/40 bg-sky-300/18 text-sky-50"
                         : "border-white/8 bg-white/5 text-slate-200 hover:bg-white/10"
@@ -143,14 +143,14 @@ export default function ScheduleTimeField({
 
             <div>
               <div className="text-[11px] uppercase tracking-[0.22em] text-slate-500">Phút</div>
-              <div className="mt-2 grid max-h-40 grid-cols-4 gap-2 overflow-y-auto pr-1 scroll-smooth">
+              <div className="mt-2 grid max-h-40 grid-cols-6 gap-2 overflow-y-auto pr-1 scroll-smooth">
                 {MINUTE_OPTIONS.map((option) => (
                   <button
                     key={option}
                     type="button"
                     disabled={disabled}
                     onClick={() => applyTime(hour, option)}
-                    className={`rounded-xl border px-3 py-2 text-sm transition ${
+                    className={`rounded-xl border px-2 py-2 text-sm transition ${
                       minute === option
                         ? "border-sky-300/40 bg-sky-300/18 text-sky-50"
                         : "border-white/8 bg-white/5 text-slate-200 hover:bg-white/10"
