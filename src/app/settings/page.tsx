@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/AppShell";
+import ScheduleTimeField from "@/components/ScheduleTimeField";
 import StatCard from "@/components/StatCard";
 import { getErrorMessage } from "@/lib/errors";
 import type { BackendCameraConfigsResponse, CameraTuningConfig } from "@/lib/types";
@@ -15,6 +16,13 @@ function toNumber(value: string, fallback?: number) {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
+
+const SCHEDULE_PRESETS = [
+  { label: "Ca trưa 12:00-13:00", start: "12:00", end: "13:00" },
+  { label: "Ca sáng 08:00-12:00", start: "08:00", end: "12:00" },
+  { label: "Ca chiều 13:00-17:00", start: "13:00", end: "17:00" },
+  { label: "Qua đêm 22:00-06:00", start: "22:00", end: "06:00" },
+];
 
 export default function SettingsPage() {
   const [configs, setConfigs] = useState<CameraTuningConfig[]>([]);
@@ -329,46 +337,67 @@ export default function SettingsPage() {
                       />
                       <span>Tự bật AI theo khung giờ</span>
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <label className="space-y-2 text-sm text-slate-300">
-                        <div>Giờ bắt đầu</div>
-                        <input
-                          type="time"
-                          value={camera.ai_schedule?.start || ""}
-                          onChange={(e) =>
+                    <div className="rounded-[1.35rem] border border-sky-300/12 bg-[linear-gradient(145deg,rgba(76,168,255,0.10),rgba(5,10,18,0.35))] p-3 text-sm text-slate-200">
+                      <div className="leading-6">
+                        Khi tick ô này và bấm <span className="font-semibold text-white">Lưu và nạp lại</span>, camera sẽ chỉ bật AI detector trong khung giờ đã chọn.
+                        Ngoài khung giờ đó, AI sẽ tự tắt để giảm tải máy.
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+                      <ScheduleTimeField
+                        label="Giờ bắt đầu"
+                        value={camera.ai_schedule?.start || ""}
+                        disabled={!camera.ai_schedule?.enabled}
+                        onChange={(nextValue) =>
+                          updateConfig(camera.id, (item) => ({
+                            ...item,
+                            ai_schedule: {
+                              enabled: Boolean(item.ai_schedule?.enabled),
+                              start: nextValue,
+                              end: item.ai_schedule?.end || "",
+                            },
+                          }))
+                        }
+                      />
+                      <ScheduleTimeField
+                        label="Giờ kết thúc"
+                        value={camera.ai_schedule?.end || ""}
+                        disabled={!camera.ai_schedule?.enabled}
+                        onChange={(nextValue) =>
+                          updateConfig(camera.id, (item) => ({
+                            ...item,
+                            ai_schedule: {
+                              enabled: Boolean(item.ai_schedule?.enabled),
+                              start: item.ai_schedule?.start || "",
+                              end: nextValue,
+                            },
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {SCHEDULE_PRESETS.map((preset) => (
+                        <button
+                          key={preset.label}
+                          type="button"
+                          onClick={() =>
                             updateConfig(camera.id, (item) => ({
                               ...item,
                               ai_schedule: {
-                                enabled: Boolean(item.ai_schedule?.enabled),
-                                start: e.target.value,
-                                end: item.ai_schedule?.end || "",
+                                enabled: true,
+                                start: preset.start,
+                                end: preset.end,
                               },
                             }))
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none"
-                        />
-                      </label>
-                      <label className="space-y-2 text-sm text-slate-300">
-                        <div>Giờ kết thúc</div>
-                        <input
-                          type="time"
-                          value={camera.ai_schedule?.end || ""}
-                          onChange={(e) =>
-                            updateConfig(camera.id, (item) => ({
-                              ...item,
-                              ai_schedule: {
-                                enabled: Boolean(item.ai_schedule?.enabled),
-                                start: item.ai_schedule?.start || "",
-                                end: e.target.value,
-                              },
-                            }))
-                          }
-                          className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none"
-                        />
-                      </label>
+                          className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10"
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
                     </div>
                     <div className="rounded-2xl border border-white/8 bg-slate-950/65 px-4 py-3 text-sm text-slate-400">
-                      Ví dụ đặt `12:00` đến `13:00` thì AI của camera này chỉ detect trong khung giờ đó theo giờ server.
+                      Ví dụ chọn <span className="font-medium text-slate-200">12:00 đến 13:00</span> thì AI của camera này chỉ detect trong khung giờ đó theo giờ server.
                     </div>
                   </div>
                 </div>
