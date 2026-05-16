@@ -24,6 +24,46 @@ const SCHEDULE_PRESETS = [
   { label: "Qua đêm 22:00-06:00", start: "22:00", end: "06:00" },
 ];
 
+function buildDefaultCameraTuning(camera: CameraTuningConfig): CameraTuningConfig {
+  return {
+    ...camera,
+    ai_schedule: {
+      enabled: false,
+      start: "08:00",
+      end: "17:00",
+    },
+    carry_guard: {
+      checkpoint_cx_norm: 0.5,
+      checkpoint_cy_norm: 0.5,
+      checkpoint_w_norm: 0.2,
+      checkpoint_h_norm: 0.2,
+      checkpoint_entry_side: "",
+      checkpoint_exit_side: "right",
+      min_baseline_frames: 3,
+      carry_score_threshold: 0.55,
+      bbox_width_gain: 1.1,
+      fg_ratio_gain: 1.08,
+    },
+    phone_detector: {
+      min_phone_conf: 0.25,
+      confirm_frames: 3,
+      release_misses: 2,
+      event_cooldown_sec: 3,
+    },
+    archive: {
+      clip_enabled: true,
+      clip_pre_seconds: 5,
+      clip_post_seconds: 5,
+      clip_codec: "mp4v",
+    },
+    media: {
+      enabled: true,
+      path: camera.id,
+      viewer: "hls",
+    },
+  };
+}
+
 export default function SettingsPage() {
   const [configs, setConfigs] = useState<CameraTuningConfig[]>([]);
   const [serverTimezone, setServerTimezone] = useState("Asia/Ho_Chi_Minh");
@@ -59,6 +99,12 @@ export default function SettingsPage() {
 
   const updateConfig = useCallback((cameraId: string, updater: (item: CameraTuningConfig) => CameraTuningConfig) => {
     setConfigs((prev) => prev.map((item) => (item.id === cameraId ? updater(item) : item)));
+  }, []);
+
+  const resetToDefaults = useCallback((cameraId: string) => {
+    setConfigs((prev) =>
+      prev.map((item) => (item.id === cameraId ? buildDefaultCameraTuning(item) : item))
+    );
   }, []);
 
   const saveConfig = useCallback(
@@ -217,6 +263,13 @@ export default function SettingsPage() {
                   <span className={`rounded-full border px-3 py-1 text-xs font-medium ${runtimeTone}`}>
                     {camera.runtime_status?.online ? "Đang hoạt động" : "Đang tắt hoặc mất kết nối"}
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => resetToDefaults(camera.id)}
+                    className="rounded-2xl border border-white/10 px-4 py-3 text-sm text-slate-200 hover:bg-white/5 max-sm:w-full"
+                  >
+                    Đặt về mặc định
+                  </button>
                   <button
                     onClick={() => void saveConfig(camera.id)}
                     disabled={savingId === camera.id}
