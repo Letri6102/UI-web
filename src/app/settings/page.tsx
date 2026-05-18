@@ -17,6 +17,16 @@ function toNumber(value: string, fallback?: number) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+const baseInputClassName = "w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none";
+
+function numberFieldProps(step: string, inputMode: "decimal" | "numeric" = "decimal") {
+  return {
+    type: "number" as const,
+    step,
+    inputMode,
+  };
+}
+
 const SCHEDULE_PRESETS = [
   { label: "Ca trưa 12:00-13:00", start: "12:00", end: "13:00" },
   { label: "Ca sáng 08:00-12:00", start: "08:00", end: "12:00" },
@@ -34,9 +44,9 @@ function buildDefaultCameraTuning(camera: CameraTuningConfig): CameraTuningConfi
     },
     carry_guard: {
       checkpoint_cx_norm: 0.5,
-      checkpoint_cy_norm: 0.5,
-      checkpoint_w_norm: 0.2,
-      checkpoint_h_norm: 0.2,
+      checkpoint_cy_norm: 0.55,
+      checkpoint_w_norm: 0.6,
+      checkpoint_h_norm: 0.9,
       checkpoint_entry_side: "",
       checkpoint_exit_side: "right",
       min_baseline_frames: 3,
@@ -54,7 +64,7 @@ function buildDefaultCameraTuning(camera: CameraTuningConfig): CameraTuningConfi
       clip_enabled: true,
       clip_pre_seconds: 5,
       clip_post_seconds: 5,
-      clip_codec: "mp4v",
+      clip_codec: "h264",
     },
     media: {
       enabled: true,
@@ -320,6 +330,7 @@ export default function SettingsPage() {
                     <label className="space-y-2 text-sm text-slate-300">
                       <div>FPS nhận luồng</div>
                       <input
+                        {...numberFieldProps("0.1")}
                         value={num(camera.target_fps)}
                         onChange={(e) =>
                           updateConfig(camera.id, (item) => ({
@@ -327,12 +338,13 @@ export default function SettingsPage() {
                             target_fps: toNumber(e.target.value, item.target_fps),
                           }))
                         }
-                        className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none"
+                        className={baseInputClassName}
                       />
                     </label>
                     <label className="space-y-2 text-sm text-slate-300">
                       <div>FPS xử lý</div>
                       <input
+                        {...numberFieldProps("0.1")}
                         value={num(camera.process_fps)}
                         onChange={(e) =>
                           updateConfig(camera.id, (item) => ({
@@ -340,7 +352,7 @@ export default function SettingsPage() {
                             process_fps: toNumber(e.target.value, item.process_fps),
                           }))
                         }
-                        className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none"
+                        className={baseInputClassName}
                       />
                     </label>
                   </div>
@@ -459,18 +471,19 @@ export default function SettingsPage() {
                   <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Phát hiện mang vật</div>
                   <div className="mt-3 grid grid-cols-2 gap-3">
                     {[
-                      ["checkpoint_cx_norm", "Tâm vùng X"],
-                      ["checkpoint_cy_norm", "Tâm vùng Y"],
-                      ["checkpoint_w_norm", "Rộng vùng"],
-                      ["checkpoint_h_norm", "Cao vùng"],
-                      ["carry_score_threshold", "Ngưỡng cảnh báo"],
-                      ["min_baseline_frames", "Frame nền"],
-                      ["bbox_width_gain", "Độ nở khung"],
-                      ["fg_ratio_gain", "Độ thay đổi nền"],
-                    ].map(([key, label]) => (
+                      ["checkpoint_cx_norm", "Tâm vùng X", "0.01", "decimal"],
+                      ["checkpoint_cy_norm", "Tâm vùng Y", "0.01", "decimal"],
+                      ["checkpoint_w_norm", "Rộng vùng", "0.01", "decimal"],
+                      ["checkpoint_h_norm", "Cao vùng", "0.01", "decimal"],
+                      ["carry_score_threshold", "Ngưỡng cảnh báo", "0.01", "decimal"],
+                      ["min_baseline_frames", "Frame nền", "1", "numeric"],
+                      ["bbox_width_gain", "Độ nở khung", "0.01", "decimal"],
+                      ["fg_ratio_gain", "Độ thay đổi nền", "0.01", "decimal"],
+                    ].map(([key, label, step, mode]) => (
                       <label key={key} className="space-y-2 text-sm text-slate-300">
                         <div>{label}</div>
                         <input
+                          {...numberFieldProps(step, mode as "decimal" | "numeric")}
                           value={num(camera.carry_guard?.[key as keyof NonNullable<CameraTuningConfig["carry_guard"]>] as number | undefined)}
                           onChange={(e) =>
                             updateConfig(camera.id, (item) => ({
@@ -484,7 +497,7 @@ export default function SettingsPage() {
                               },
                             }))
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none"
+                          className={baseInputClassName}
                         />
                       </label>
                     ))}
@@ -538,14 +551,15 @@ export default function SettingsPage() {
                   <div className="text-[11px] uppercase tracking-[0.24em] text-slate-500">Điện thoại và lưu bằng chứng</div>
                   <div className="mt-3 grid grid-cols-2 gap-3">
                     {[
-                      ["min_phone_conf", "Ngưỡng điện thoại"],
-                      ["confirm_frames", "Frame xác nhận"],
-                      ["release_misses", "Frame bỏ qua"],
-                      ["event_cooldown_sec", "Thời gian nghỉ"],
-                    ].map(([key, label]) => (
+                      ["min_phone_conf", "Ngưỡng điện thoại", "0.01", "decimal"],
+                      ["confirm_frames", "Frame xác nhận", "1", "numeric"],
+                      ["release_misses", "Frame bỏ qua", "1", "numeric"],
+                      ["event_cooldown_sec", "Thời gian nghỉ", "0.1", "decimal"],
+                    ].map(([key, label, step, mode]) => (
                       <label key={key} className="space-y-2 text-sm text-slate-300">
                         <div>{label}</div>
                         <input
+                          {...numberFieldProps(step, mode as "decimal" | "numeric")}
                           value={num(camera.phone_detector?.[key as keyof NonNullable<CameraTuningConfig["phone_detector"]>] as number | undefined)}
                           onChange={(e) =>
                             updateConfig(camera.id, (item) => ({
@@ -559,7 +573,7 @@ export default function SettingsPage() {
                               },
                             }))
                           }
-                          className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none"
+                          className={baseInputClassName}
                         />
                       </label>
                     ))}
@@ -582,6 +596,7 @@ export default function SettingsPage() {
                     <label className="space-y-2 text-sm text-slate-300">
                       <div>Số giây trước cảnh báo</div>
                       <input
+                        {...numberFieldProps("0.1")}
                         value={num(camera.archive?.clip_pre_seconds)}
                         onChange={(e) =>
                           updateConfig(camera.id, (item) => ({
@@ -592,12 +607,13 @@ export default function SettingsPage() {
                             },
                           }))
                         }
-                        className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none"
+                        className={baseInputClassName}
                       />
                     </label>
                     <label className="space-y-2 text-sm text-slate-300">
                       <div>Số giây sau cảnh báo</div>
                       <input
+                        {...numberFieldProps("0.1")}
                         value={num(camera.archive?.clip_post_seconds)}
                         onChange={(e) =>
                           updateConfig(camera.id, (item) => ({
@@ -608,13 +624,13 @@ export default function SettingsPage() {
                             },
                           }))
                         }
-                        className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white outline-none"
+                        className={baseInputClassName}
                       />
                     </label>
                     <label className="space-y-2 text-sm text-slate-300">
                       <div>Định dạng clip</div>
                       <input
-                        value={camera.archive?.clip_codec || "mp4v"}
+                        value={camera.archive?.clip_codec || "h264"}
                         onChange={(e) =>
                           updateConfig(camera.id, (item) => ({
                             ...item,
