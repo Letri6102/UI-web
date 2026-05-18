@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import AppShell from "@/components/AppShell";
 import EventCaptureCard from "@/components/EventCaptureCard";
 import StatCard from "@/components/StatCard";
@@ -70,11 +70,19 @@ export default function EventsPage() {
     typeof window === "undefined" ? "" : window.localStorage.getItem("warehouse-review-auth-mode") || ""
   );
   const [pin, setPin] = useState("");
+  const refreshRequestIdRef = useRef(0);
 
   const deferredQuery = useDeferredValue(searchText.trim());
+  const reviewFilterMatches = useCallback(
+    (status: string) => reviewStatus === "all" || reviewStatus === status,
+    [reviewStatus]
+  );
 
   const refresh = useCallback(
     async (options?: { silent?: boolean }) => {
+      const requestId = refreshRequestIdRef.current + 1;
+      refreshRequestIdRef.current = requestId;
+
       if (!options?.silent) {
         setLoading(true);
       }
@@ -101,13 +109,16 @@ export default function EventsPage() {
         }
 
         const data = (await res.json()) as BackendEventsResponse;
+        if (refreshRequestIdRef.current !== requestId) return;
         setSummary(data?.summary);
         setEvents((data?.items || []).map(mapEvent));
       } catch (error: unknown) {
+        if (refreshRequestIdRef.current !== requestId) return;
         setEvents([]);
         setSummary(undefined);
         setErrorText(getErrorMessage(error));
       } finally {
+        if (refreshRequestIdRef.current !== requestId) return;
         if (!options?.silent) {
           setLoading(false);
         }
@@ -144,15 +155,20 @@ export default function EventsPage() {
         }
 
         const updated = mapEvent(data.item);
-        setEvents((prev) => prev.map((event) => (event.id === eventId ? updated : event)));
-        void refresh({ silent: true });
+        setEvents((prev) => {
+          if (!reviewFilterMatches(nextStatus)) {
+            return prev.filter((event) => event.id !== eventId);
+          }
+          return prev.map((event) => (event.id === eventId ? updated : event));
+        });
+        await refresh({ silent: true });
       } catch (error: unknown) {
         setErrorText(getErrorMessage(error));
       } finally {
         setReviewingId(null);
       }
     },
-    [authToken, operatorName, refresh]
+    [authToken, operatorName, refresh, reviewFilterMatches]
   );
 
   const handleDelete = useCallback(
