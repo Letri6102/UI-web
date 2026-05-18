@@ -80,6 +80,7 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [errorText, setErrorText] = useState("");
+  const [numericDrafts, setNumericDrafts] = useState<Record<string, string>>({});
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -110,6 +111,47 @@ export default function SettingsPage() {
   const updateConfig = useCallback((cameraId: string, updater: (item: CameraTuningConfig) => CameraTuningConfig) => {
     setConfigs((prev) => prev.map((item) => (item.id === cameraId ? updater(item) : item)));
   }, []);
+
+  const draftKey = useCallback((cameraId: string, field: string) => `${cameraId}:${field}`, []);
+
+  const getNumericValue = useCallback(
+    (cameraId: string, field: string, current?: number) => {
+      const key = draftKey(cameraId, field);
+      return Object.prototype.hasOwnProperty.call(numericDrafts, key) ? numericDrafts[key] : num(current);
+    },
+    [draftKey, numericDrafts]
+  );
+
+  const updateNumericValue = useCallback(
+    (cameraId: string, field: string, rawValue: string, onValidNumber: (value: number) => void) => {
+      const key = draftKey(cameraId, field);
+      setNumericDrafts((prev) => ({ ...prev, [key]: rawValue }));
+      if (!rawValue.trim()) return;
+      const parsed = Number(rawValue);
+      if (Number.isFinite(parsed)) {
+        onValidNumber(parsed);
+      }
+    },
+    [draftKey]
+  );
+
+  const commitNumericValue = useCallback(
+    (cameraId: string, field: string, defaultValue: number | undefined, onEmpty: (value: number | undefined) => void) => {
+      const key = draftKey(cameraId, field);
+      const rawValue = numericDrafts[key];
+      setNumericDrafts((prev) => {
+        if (!Object.prototype.hasOwnProperty.call(prev, key)) return prev;
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+      if (rawValue == null) return;
+      if (!rawValue.trim()) {
+        onEmpty(defaultValue);
+      }
+    },
+    [draftKey, numericDrafts]
+  );
 
   const resetToDefaults = useCallback((cameraId: string) => {
     setConfigs((prev) =>
@@ -249,6 +291,7 @@ export default function SettingsPage() {
 
       <section className="space-y-5">
         {configs.map((camera) => {
+          const defaultCamera = buildDefaultCameraTuning(camera);
           const runtimeTone = camera.runtime_status?.online
             ? "border-emerald-400/30 bg-emerald-400/12 text-emerald-100"
             : "border-red-500/30 bg-red-500/12 text-red-200";
@@ -331,12 +374,22 @@ export default function SettingsPage() {
                       <div>FPS nhận luồng</div>
                       <input
                         {...numberFieldProps("0.1")}
-                        value={num(camera.target_fps)}
+                        value={getNumericValue(camera.id, "target_fps", camera.target_fps)}
                         onChange={(e) =>
-                          updateConfig(camera.id, (item) => ({
-                            ...item,
-                            target_fps: toNumber(e.target.value, item.target_fps),
-                          }))
+                          updateNumericValue(camera.id, "target_fps", e.target.value, (value) =>
+                            updateConfig(camera.id, (item) => ({
+                              ...item,
+                              target_fps: value,
+                            }))
+                          )
+                        }
+                        onBlur={() =>
+                          commitNumericValue(camera.id, "target_fps", defaultCamera.target_fps, (value) =>
+                            updateConfig(camera.id, (item) => ({
+                              ...item,
+                              target_fps: value,
+                            }))
+                          )
                         }
                         className={baseInputClassName}
                       />
@@ -345,12 +398,22 @@ export default function SettingsPage() {
                       <div>FPS xử lý</div>
                       <input
                         {...numberFieldProps("0.1")}
-                        value={num(camera.process_fps)}
+                        value={getNumericValue(camera.id, "process_fps", camera.process_fps)}
                         onChange={(e) =>
-                          updateConfig(camera.id, (item) => ({
-                            ...item,
-                            process_fps: toNumber(e.target.value, item.process_fps),
-                          }))
+                          updateNumericValue(camera.id, "process_fps", e.target.value, (value) =>
+                            updateConfig(camera.id, (item) => ({
+                              ...item,
+                              process_fps: value,
+                            }))
+                          )
+                        }
+                        onBlur={() =>
+                          commitNumericValue(camera.id, "process_fps", defaultCamera.process_fps, (value) =>
+                            updateConfig(camera.id, (item) => ({
+                              ...item,
+                              process_fps: value,
+                            }))
+                          )
                         }
                         className={baseInputClassName}
                       />
@@ -484,18 +547,36 @@ export default function SettingsPage() {
                         <div>{label}</div>
                         <input
                           {...numberFieldProps(step, mode as "decimal" | "numeric")}
-                          value={num(camera.carry_guard?.[key as keyof NonNullable<CameraTuningConfig["carry_guard"]>] as number | undefined)}
+                          value={getNumericValue(
+                            camera.id,
+                            `carry_guard.${key}`,
+                            camera.carry_guard?.[key as keyof NonNullable<CameraTuningConfig["carry_guard"]>] as number | undefined
+                          )}
                           onChange={(e) =>
-                            updateConfig(camera.id, (item) => ({
-                              ...item,
-                              carry_guard: {
-                                ...(item.carry_guard || {}),
-                                [key]: toNumber(
-                                  e.target.value,
-                                  item.carry_guard?.[key as keyof NonNullable<CameraTuningConfig["carry_guard"]>] as number | undefined
-                                ),
-                              },
-                            }))
+                            updateNumericValue(camera.id, `carry_guard.${key}`, e.target.value, (value) =>
+                              updateConfig(camera.id, (item) => ({
+                                ...item,
+                                carry_guard: {
+                                  ...(item.carry_guard || {}),
+                                  [key]: value,
+                                },
+                              }))
+                            )
+                          }
+                          onBlur={() =>
+                            commitNumericValue(
+                              camera.id,
+                              `carry_guard.${key}`,
+                              defaultCamera.carry_guard?.[key as keyof NonNullable<CameraTuningConfig["carry_guard"]>] as number | undefined,
+                              (value) =>
+                                updateConfig(camera.id, (item) => ({
+                                  ...item,
+                                  carry_guard: {
+                                    ...(item.carry_guard || {}),
+                                    [key]: value,
+                                  },
+                                }))
+                            )
                           }
                           className={baseInputClassName}
                         />
@@ -560,18 +641,36 @@ export default function SettingsPage() {
                         <div>{label}</div>
                         <input
                           {...numberFieldProps(step, mode as "decimal" | "numeric")}
-                          value={num(camera.phone_detector?.[key as keyof NonNullable<CameraTuningConfig["phone_detector"]>] as number | undefined)}
+                          value={getNumericValue(
+                            camera.id,
+                            `phone_detector.${key}`,
+                            camera.phone_detector?.[key as keyof NonNullable<CameraTuningConfig["phone_detector"]>] as number | undefined
+                          )}
                           onChange={(e) =>
-                            updateConfig(camera.id, (item) => ({
-                              ...item,
-                              phone_detector: {
-                                ...(item.phone_detector || {}),
-                                [key]: toNumber(
-                                  e.target.value,
-                                  item.phone_detector?.[key as keyof NonNullable<CameraTuningConfig["phone_detector"]>] as number | undefined
-                                ),
-                              },
-                            }))
+                            updateNumericValue(camera.id, `phone_detector.${key}`, e.target.value, (value) =>
+                              updateConfig(camera.id, (item) => ({
+                                ...item,
+                                phone_detector: {
+                                  ...(item.phone_detector || {}),
+                                  [key]: value,
+                                },
+                              }))
+                            )
+                          }
+                          onBlur={() =>
+                            commitNumericValue(
+                              camera.id,
+                              `phone_detector.${key}`,
+                              defaultCamera.phone_detector?.[key as keyof NonNullable<CameraTuningConfig["phone_detector"]>] as number | undefined,
+                              (value) =>
+                                updateConfig(camera.id, (item) => ({
+                                  ...item,
+                                  phone_detector: {
+                                    ...(item.phone_detector || {}),
+                                    [key]: value,
+                                  },
+                                }))
+                            )
                           }
                           className={baseInputClassName}
                         />
@@ -597,15 +696,28 @@ export default function SettingsPage() {
                       <div>Số giây trước cảnh báo</div>
                       <input
                         {...numberFieldProps("0.1")}
-                        value={num(camera.archive?.clip_pre_seconds)}
+                        value={getNumericValue(camera.id, "archive.clip_pre_seconds", camera.archive?.clip_pre_seconds)}
                         onChange={(e) =>
-                          updateConfig(camera.id, (item) => ({
-                            ...item,
-                            archive: {
-                              ...(item.archive || {}),
-                              clip_pre_seconds: toNumber(e.target.value, item.archive?.clip_pre_seconds),
-                            },
-                          }))
+                          updateNumericValue(camera.id, "archive.clip_pre_seconds", e.target.value, (value) =>
+                            updateConfig(camera.id, (item) => ({
+                              ...item,
+                              archive: {
+                                ...(item.archive || {}),
+                                clip_pre_seconds: value,
+                              },
+                            }))
+                          )
+                        }
+                        onBlur={() =>
+                          commitNumericValue(camera.id, "archive.clip_pre_seconds", defaultCamera.archive?.clip_pre_seconds, (value) =>
+                            updateConfig(camera.id, (item) => ({
+                              ...item,
+                              archive: {
+                                ...(item.archive || {}),
+                                clip_pre_seconds: value,
+                              },
+                            }))
+                          )
                         }
                         className={baseInputClassName}
                       />
@@ -614,15 +726,28 @@ export default function SettingsPage() {
                       <div>Số giây sau cảnh báo</div>
                       <input
                         {...numberFieldProps("0.1")}
-                        value={num(camera.archive?.clip_post_seconds)}
+                        value={getNumericValue(camera.id, "archive.clip_post_seconds", camera.archive?.clip_post_seconds)}
                         onChange={(e) =>
-                          updateConfig(camera.id, (item) => ({
-                            ...item,
-                            archive: {
-                              ...(item.archive || {}),
-                              clip_post_seconds: toNumber(e.target.value, item.archive?.clip_post_seconds),
-                            },
-                          }))
+                          updateNumericValue(camera.id, "archive.clip_post_seconds", e.target.value, (value) =>
+                            updateConfig(camera.id, (item) => ({
+                              ...item,
+                              archive: {
+                                ...(item.archive || {}),
+                                clip_post_seconds: value,
+                              },
+                            }))
+                          )
+                        }
+                        onBlur={() =>
+                          commitNumericValue(camera.id, "archive.clip_post_seconds", defaultCamera.archive?.clip_post_seconds, (value) =>
+                            updateConfig(camera.id, (item) => ({
+                              ...item,
+                              archive: {
+                                ...(item.archive || {}),
+                                clip_post_seconds: value,
+                              },
+                            }))
+                          )
                         }
                         className={baseInputClassName}
                       />
